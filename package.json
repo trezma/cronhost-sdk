@@ -1,0 +1,37 @@
+{
+  "name": "cronhost",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for Cronhost - schedule HTTP requests with cron expressions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cronhost",
+    "cron",
+    "scheduler",
+    "api",
+    "typescript",
+    "sdk"
+  ],
+  "author": "Cronhost",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cronhost/cronhost-sdk.git"
+  },
+  "homepage": "https://cronho.st",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
