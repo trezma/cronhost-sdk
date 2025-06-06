@@ -88,7 +88,7 @@ export interface ApiError {
   };
 }
 
-export class CronhostSDK {
+export class Cronhost {
   private config: CronhostConfig;
   private baseUrl: string;
 
@@ -103,22 +103,75 @@ export class CronhostSDK {
   ): Promise<T> {
     const url = `${this.baseUrl}/api/v1${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": this.config.apiKey,
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.config.apiKey,
+          ...options.headers,
+        },
+      });
 
-    const data = await response.json();
+      // Check content type to determine how to parse the response
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType?.includes("application/json");
 
-    if (!response.ok) {
-      throw new Error(data.error?.message ?? "API request failed");
+      let data: any;
+      let responseText = "";
+
+      try {
+        if (isJson) {
+          data = await response.json();
+        } else {
+          responseText = await response.text();
+          // Try to parse as JSON anyway in case content-type is wrong
+          try {
+            data = JSON.parse(responseText);
+          } catch {
+            data = { error: { message: responseText } };
+          }
+        }
+      } catch (parseError) {
+        const err = parseError as Error;
+        throw new Error(`Failed to parse response: ${err.message}`);
+      }
+
+      if (!response.ok) {
+        // Enhanced error message with more context
+        const errorMessage =
+          data?.error?.message ||
+          data?.message ||
+          responseText ||
+          `HTTP ${response.status}: ${response.statusText}`;
+
+        const errorDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          url: url,
+          message: errorMessage,
+          ...(data?.error && { error: data.error }),
+        };
+
+        throw new Error(`API request failed: ${errorMessage}`, {
+          cause: errorDetails,
+        });
+      }
+
+      return data;
+    } catch (error) {
+      const err = error as Error;
+      // If it's already our custom error, re-throw it
+      if (
+        err.message?.startsWith("API request failed:") ||
+        err.message?.startsWith("Failed to parse response:")
+      ) {
+        throw err;
+      }
+
+      // Handle network errors and other fetch failures
+      throw new Error(`Network error: ${err.message}`, { cause: err });
     }
-
-    return data;
   }
 
   // Schedule methods
@@ -215,4 +268,4 @@ export class CronhostSDK {
   }
 }
 
-export default CronhostSDK;
+export default Cronhost;

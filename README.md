@@ -11,14 +11,14 @@ npm install cronhost
 ## Quick Start
 
 ```typescript
-import { CronhostSDK } from "cronhost";
+import { Cronhost } from "cronhost";
 
-const client = new CronhostSDK({
+const cronhost = new Cronhost({
   apiKey: "ch_your_api_key_here",
 });
 
 // Create a new schedule
-const schedule = await client.createSchedule({
+const schedule = await cronhost.createSchedule({
   name: "Daily Health Check",
   cronExpression: "0 9 * * *", // 9 AM daily
   timezone: "UTC",
@@ -38,7 +38,7 @@ const jobs = await client.getJobs({ scheduleId: schedule.id });
 ### Configuration
 
 ```typescript
-const client = new CronhostSDK({
+const cronhost = new Cronhost({
   apiKey: "ch_your_api_key_here",
 });
 ```
