@@ -82,7 +82,10 @@ export interface ApiResponse<T> {
 
 export interface BulkCreateResponse {
   count: number;
-  message: string;
+  schedules: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export interface BulkValidationError {
@@ -220,7 +223,6 @@ export class Cronhost {
         headers: schedule.headers
           ? JSON.stringify(schedule.headers)
           : undefined,
-        body: schedule.body ? JSON.stringify(schedule.body) : undefined,
       }));
 
       const response = await this.request<ApiResponse<BulkCreateResponse>>(
@@ -236,7 +238,6 @@ export class Cronhost {
       const requestData = {
         ...data,
         headers: data.headers ? JSON.stringify(data.headers) : undefined,
-        body: data.body ? JSON.stringify(data.body) : undefined,
       };
 
       const response = await this.request<ApiResponse<Schedule>>("/schedules", {

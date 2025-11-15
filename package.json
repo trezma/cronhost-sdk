@@ -1,6 +1,6 @@
 {
   "name": "cronhost",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Official TypeScript SDK for Cronhost - schedule HTTP requests with cron expressions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
