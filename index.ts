@@ -80,11 +80,23 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export interface BulkCreateResponse {
+  count: number;
+  message: string;
+}
+
+export interface BulkValidationError {
+  index: number;
+  schedule: CreateScheduleData;
+  error: string;
+}
+
 export interface ApiError {
   error: {
     message: string;
     code: string;
     details?: any;
+    index?: number;
   };
 }
 
@@ -187,17 +199,52 @@ export class Cronhost {
     return response.data;
   }
 
-  async createSchedule(data: CreateScheduleData): Promise<Schedule> {
-    const requestData = {
-      ...data,
-      headers: data.headers ? JSON.stringify(data.headers) : undefined,
-    };
+  async createSchedule(data: CreateScheduleData): Promise<Schedule>;
+  async createSchedule(data: CreateScheduleData[]): Promise<BulkCreateResponse>;
+  async createSchedule(
+    data: CreateScheduleData | CreateScheduleData[]
+  ): Promise<Schedule | BulkCreateResponse> {
+    const isBulk = Array.isArray(data);
 
-    const response = await this.request<ApiResponse<Schedule>>("/schedules", {
-      method: "POST",
-      body: JSON.stringify(requestData),
-    });
-    return response.data;
+    if (isBulk) {
+      // Bulk creation
+      if (data.length === 0) {
+        throw new Error("At least one schedule is required for bulk creation");
+      }
+      if (data.length > 1000) {
+        throw new Error("Cannot create more than 1000 schedules at once");
+      }
+
+      const requestData = data.map((schedule) => ({
+        ...schedule,
+        headers: schedule.headers
+          ? JSON.stringify(schedule.headers)
+          : undefined,
+        body: schedule.body ? JSON.stringify(schedule.body) : undefined,
+      }));
+
+      const response = await this.request<ApiResponse<BulkCreateResponse>>(
+        "/schedules/bulk",
+        {
+          method: "POST",
+          body: JSON.stringify(requestData),
+        }
+      );
+      return response.data;
+    } else {
+      // Single schedule creation
+      const requestData = {
+        ...data,
+        headers: data.headers ? JSON.stringify(data.headers) : undefined,
+        body: data.body ? JSON.stringify(data.body) : undefined,
+      };
+
+      const response = await this.request<ApiResponse<Schedule>>("/schedules", {
+        method: "POST",
+        body: JSON.stringify(requestData),
+      });
+      return response.data;
+    }
   }
 
   async updateSchedule(
